@@ -25,6 +25,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,33 +48,27 @@ public class MainActivity extends AppCompatActivity {
     private Boolean mFavoriteFlag;
     ProgressDialog mProgress;
 
-    private ChildEventListener mFavoriteEventListener = new ChildEventListener() {
+    private ValueEventListener mFavoriteEventListener = new ValueEventListener() {
         @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        public void onDataChange(DataSnapshot dataSnapshot) {
             HashMap map = (HashMap) dataSnapshot.getValue();
 
-            String questionId = dataSnapshot.getKey();
-            String genre = (String) map.get("genre").toString();
-            mFavoriteMap.put(questionId, genre);
-            //mFavoriteMap.put("genre", genre);
-            //Log.d("ANDROID", String.valueOf(mFavoriteMap));
-            //Log.d("ANDROID", "pass-AA");
+            String questionId;
+            String genre;
+            for (Object key: map.keySet()) {
+                questionId = key.toString();
+                HashMap tempGenre = (HashMap) dataSnapshot.child(key.toString()).getValue();
+                genre = tempGenre.get("genre").toString();
+                mFavoriteMap.put(questionId, genre);
+            }
+
+            for (int i = 1; i <= 4; i++) {
+                mGenreSelected = i;
+                mGenreSelectedRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenreSelected));
+                mGenreSelectedRef.addChildEventListener(mEventListener);
+            }
         }
 
-        @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-        }
-
-        @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-        }
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
@@ -84,11 +79,9 @@ public class MainActivity extends AppCompatActivity {
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            //TODO mFavoriteMapでgenreが一致するノードで、質問IDが一致するところでGetValue
-            //Log.d("ANDROID", String.valueOf(mGenreSelected));
+            //mFavoriteMapでgenreが一致するノードで、質問IDが一致するところでGetValue
 
             if ((mFavoriteFlag == true && mFavoriteMap.get(dataSnapshot.getKey()) != null) || mFavoriteFlag == false) {
-
                 HashMap map = (HashMap) dataSnapshot.getValue();
                 String title = (String) map.get("title");
                 String genre =(String) map.get("genre");
@@ -120,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
                 Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenreSelected, genre, genreName, bytes, mAnswerArrayList);
                 mQuestionArrayList.add(question);
                 mAdapter.notifyDataSetChanged();
+
             }
         }
 
@@ -330,13 +324,8 @@ public class MainActivity extends AppCompatActivity {
             mFavoriteMap = new HashMap<>();
             if (user != null) {
                 mFavoriteRef = mDatabaseReference.child(Const.FavoritesPATH).child(user.getUid());
-                mFavoriteRef.addChildEventListener(mFavoriteEventListener);
-            }
-            for (int i = 1; i <= 4; i++) {
-                mGenreSelected = i;
-                mGenreSelectedRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenreSelected));
-                mGenreSelectedRef.addChildEventListener(mEventListener);
-                //Log.d("ANDROID", "pass");
+                mFavoriteRef.addListenerForSingleValueEvent(mFavoriteEventListener);
+
             }
             mGenreSelected = 100;
         } else {
@@ -344,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
             mGenreSelectedRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenreSelected));
             mGenreSelectedRef.addChildEventListener(mEventListener);
         }
+
         mProgress.dismiss();
     }
 
