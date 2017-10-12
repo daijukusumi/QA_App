@@ -55,11 +55,14 @@ public class MainActivity extends AppCompatActivity {
 
             String questionId;
             String genre;
-            for (Object key: map.keySet()) {
-                questionId = key.toString();
-                HashMap tempGenre = (HashMap) dataSnapshot.child(key.toString()).getValue();
-                genre = tempGenre.get("genre").toString();
-                mFavoriteMap.put(questionId, genre);
+
+            if (map != null) {
+                for (Object key : map.keySet()) {
+                    questionId = key.toString();
+                    HashMap tempGenre = (HashMap) dataSnapshot.child(key.toString()).getValue();
+                    genre = tempGenre.get("genre").toString();
+                    mFavoriteMap.put(questionId, genre);
+                }
             }
 
             for (int i = 1; i <= 4; i++) {
@@ -67,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 mGenreSelectedRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenreSelected));
                 mGenreSelectedRef.addChildEventListener(mEventListener);
             }
+            mGenreSelected = 100;
         }
 
 
@@ -325,9 +329,8 @@ public class MainActivity extends AppCompatActivity {
             if (user != null) {
                 mFavoriteRef = mDatabaseReference.child(Const.FavoritesPATH).child(user.getUid());
                 mFavoriteRef.addListenerForSingleValueEvent(mFavoriteEventListener);
-
             }
-            mGenreSelected = 100;
+
         } else {
             mFavoriteFlag = false;
             mGenreSelectedRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenreSelected));

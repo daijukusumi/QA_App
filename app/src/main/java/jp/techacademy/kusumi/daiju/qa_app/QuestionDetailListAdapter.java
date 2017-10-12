@@ -174,9 +174,6 @@ public class QuestionDetailListAdapter extends BaseAdapter implements View.OnCli
     @Override
     public void onClick(View view) {
 
-        // ログイン済みのユーザーを取得する
-        user = FirebaseAuth.getInstance().getCurrentUser();
-
         if (mFavoriteFlag == false) {
             Map<String, String> data = new HashMap<String, String>();
             data.put("genre", mQustion.getGenreNo());
